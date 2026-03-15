@@ -1,0 +1,10 @@
+# Build
+cmake-build-debug/
+cmake-build-release/
+cmake-build-*/
+
+# Ejecutables y binarios
+*.exe
+*.out
+*.o
+*.obj
