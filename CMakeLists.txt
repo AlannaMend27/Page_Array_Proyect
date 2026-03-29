@@ -14,7 +14,8 @@ target_link_options(generator PRIVATE -static)
 #Sorter
 add_executable(sorter
         src/sorter/sorter.cpp
-        src/sorter/sorter.cpp)
+        src/sorter/sorter.cpp
+        src/sorter/PagedArray.cpp)
 
 target_link_options(sorter PRIVATE -static)
 

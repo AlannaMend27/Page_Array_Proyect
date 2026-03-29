@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
+#include "PagedArray.h"
 
 enum class Algorithm {
     BUBBLE,
@@ -29,7 +30,7 @@ Algorithm getAlgorithm(std::string value) {
     if (value == "insertion") return Algorithm::INSERTION;
     if (value == "selection" ) return Algorithm::SELECTION;
     if (value == "merge") return Algorithm::MERGE;
-    if (value == "quick sort") return Algorithm::QUICK;
+    if (value == "quicksort") return Algorithm::QUICK;
 
     throw std::invalid_argument("Algoritmo no valido");
 
@@ -73,15 +74,17 @@ DataVal RecivedArguments(int argc, char* argv[]) {
             if (!findBin) {
                 throw std::invalid_argument("La direccion ingresada no contiene un archivo .bin");
             }
-            dataVal.inputPath = parameter2;
-        }
 
+            std::filesystem::path Input(parameter2);
+            dataVal.inputPath = Input/"data.bin";
+        }
         else if (parameter1 == "-output") {
             if (!std::filesystem::exists(parameter2)){
                 throw std::invalid_argument("Error: la direccion ingresada no existe");
             }
 
-            dataVal.outputPath = parameter2;
+            std::filesystem::path Output(parameter2);
+            dataVal.outputPath = Output / "dataSorted.bin";
         }
         else if (parameter1 == "-alg") {
 
@@ -101,12 +104,9 @@ DataVal RecivedArguments(int argc, char* argv[]) {
 
 void copyfile( std::filesystem::path inputpath, std::filesystem::path outputpath) {
 
-    std::filesystem::path completePathInput = inputpath / "data.bin";
-    std::filesystem::path completePathOutput = inputpath / "dataSorted.bin";
-
     // abrir archivos
-    std::ifstream  src(completePathInput, std::ios::binary);
-    std::ofstream  dst(completePathOutput,   std::ios::binary);
+    std::ifstream  src(inputpath, std::ios::binary);
+    std::ofstream  dst(outputpath,   std::ios::binary);
 
     // verificar si se abrieron correctamente los archivos
     if (!src.is_open()) {
@@ -127,6 +127,17 @@ void copyfile( std::filesystem::path inputpath, std::filesystem::path outputpath
 
 }
 
+int AmountOfElements(std::filesystem::path inputPath) {
+    // contar la cantidad de
+    FILE* f = fopen(inputPath.string().c_str(), "rb");
+    fseek(f, 0, SEEK_END);
+    long fileSize = ftell(f);
+    fclose(f);
+
+    return fileSize / sizeof(int);
+
+}
+
 
 int main(int argc, char* argv[]) {
 
@@ -139,6 +150,17 @@ int main(int argc, char* argv[]) {
 
         // copiar archivo input al output
         copyfile(variables.inputPath, variables.outputPath);
+
+        // llamar a la clase PagedArray
+        int totalElements = AmountOfElements(variables.inputPath);
+        PagedArray arr(variables.outputPath, variables.pageSize, variables.pageCount, totalElements);
+        std::cout << "Fin de ejecucion arr: " << arr[1] << std::endl;
+        std::cout << "Fin de ejecucion arr: " << arr[2] << std::endl;
+        std::cout << "Fin de ejecucion arr: " << arr[3] << std::endl;
+        std::cout << "Fin de ejecucion arr: " << arr[4] << std::endl;
+        std::cout << "Fin de ejecucion arr: " << arr[5] << std::endl;
+        std::cout << "Fin de ejecucion arr: " << arr[6] << std::endl;
+        std::cout << "Fin de ejecucion Ianbolita final: " << arr[11] << " PageHits: " << arr.pageHits << " PageFaults: "<< arr.pageFaults;
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
