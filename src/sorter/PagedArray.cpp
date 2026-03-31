@@ -25,6 +25,13 @@ PagedArray::PagedArray(std::filesystem::path filePath, int pageSize, int pageCou
     dirty    = new bool[pageCount];
     lruOrder = new int[pageCount];
 
+    // inicializar variables importantes
+    for (int i = 0; i < pageCount; i++) {
+        pageIds[i] = -1;
+        dirty[i] = false;
+        lruOrder[i] = 0;
+    }
+
     std:: cout<<"Hello desde paged Array" << std::endl;
     
 }
@@ -33,7 +40,7 @@ int& PagedArray::operator[](int index){
     int SlotPage;
 
     // verificar la cantidad de elementos
-    if (index<0 || index > totalElements) {
+    if (index<0 || index >= totalElements) {
         throw std::invalid_argument("Indice Invalido");;
     }
     // obtener la pagina donde se encuentra el index
@@ -64,6 +71,7 @@ int& PagedArray::operator[](int index){
         }
 
     }
+    dirty[SlotPage] = true;
     return DataRef(SlotPage, pageIndex);
 }
 
@@ -142,8 +150,6 @@ int PagedArray::ReplaceLRU() {
     if (dirty[index] == true) {
         SavePage(index);
     }
-    pageIds[index] = -1;
-    dirty[index] = false;
     return index;
 }
 
@@ -172,12 +178,18 @@ int PagedArray::GetSpace() {
 // destructor
 PagedArray::~PagedArray() {
 
+    // guardar paginas restantes (En caso de que alguna no se guarde antes de terminar)
+    for (int i = 0; i < pageCount; i++) {
+        if (dirty[i]) SavePage(i);
+    }
+
     delete[] totalMemory;
     delete[] pageIds;
     delete[] dirty;
     delete[] lruOrder;
 
     if (file) fclose(file);
+
 }
 
 //

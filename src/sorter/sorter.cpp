@@ -4,35 +4,42 @@
 #include <string>
 #include <algorithm>
 #include "PagedArray.h"
+#include "../Algorithms/Algorithm1.h"
+#include "../Algorithms/Algorithm2.h"
+#include <chrono>
 
-enum class Algorithm {
-    BUBBLE,
-    INSERTION,
-    SELECTION,
-    MERGE,
-    QUICK
-};
 
 struct DataVal {
-    std::filesystem::path inputPath;
+    std::filesystem::path inputPathFile;
+    std::filesystem::path outputPathFile;
     std::filesystem::path outputPath;
-    Algorithm algorithm;
+    std::string algorithm;
     size_t pageSize;
     size_t pageCount;
 };
 
-Algorithm getAlgorithm(std::string value) {
+std::string getAlgorithm(std::string value) {
 
     std::string Valuelower = value;
     std::transform(Valuelower.begin(), Valuelower.end(), Valuelower.begin(), ::tolower);
 
-    if (value == "bubble") return Algorithm::BUBBLE;
-    if (value == "insertion") return Algorithm::INSERTION;
-    if (value == "selection" ) return Algorithm::SELECTION;
-    if (value == "merge") return Algorithm::MERGE;
-    if (value == "quicksort") return Algorithm::QUICK;
+    if (Valuelower == "bubble") {
+        return "Bubble Sort";
+    }
+    if (Valuelower == "insertion") {
+        return "Insertion Sort";
+    }
+    if (Valuelower == "selection" ) {
+        return "Selection Sort";
+    }
+    if (Valuelower == "merge") {
+        return "Merge Sort";
+    }
+    if (Valuelower == "quicksort") {
+        return "Quick Sort";
+    }
 
-    throw std::invalid_argument("Algoritmo no valido");
+    throw std::invalid_argument("Algoritmo no valido, los algoritmos validos son: Bubble, Insertion, Selection, Merge o Quicksort");
 
 }
 
@@ -76,7 +83,7 @@ DataVal RecivedArguments(int argc, char* argv[]) {
             }
 
             std::filesystem::path Input(parameter2);
-            dataVal.inputPath = Input/"data.bin";
+            dataVal.inputPathFile = Input/"data.bin";
         }
         else if (parameter1 == "-output") {
             if (!std::filesystem::exists(parameter2)){
@@ -84,7 +91,8 @@ DataVal RecivedArguments(int argc, char* argv[]) {
             }
 
             std::filesystem::path Output(parameter2);
-            dataVal.outputPath = Output / "dataSorted.bin";
+            dataVal.outputPath = Output;
+            dataVal.outputPathFile = Output / "dataSorted.bin";
         }
         else if (parameter1 == "-alg") {
 
@@ -128,7 +136,7 @@ void copyfile( std::filesystem::path inputpath, std::filesystem::path outputpath
 }
 
 int AmountOfElements(std::filesystem::path inputPath) {
-    // contar la cantidad de
+    // contar la cantidad de elementos en el archivo
     FILE* f = fopen(inputPath.string().c_str(), "rb");
     fseek(f, 0, SEEK_END);
     long fileSize = ftell(f);
@@ -136,6 +144,82 @@ int AmountOfElements(std::filesystem::path inputPath) {
 
     return fileSize / sizeof(int);
 
+}
+
+void stadistics(PagedArray& arr, const DataVal& variables, std::chrono::duration<double> time) {
+
+    // obtener tiempo
+
+    std::cout << "==== RESUMEN DE EJECUCION ====  " << std::endl;
+    std::cout << "-> Algoritmo utilizado:  " << variables.algorithm << std::endl;
+    std::cout << "-> Duracion:  " << time << std::endl;
+    std::cout << "-> Cantidad de page hits:  " << arr.getPageHits() << std::endl;
+    std::cout << "-> Cantidad de page Faults:  " << arr.getPageFaults() << std::endl;
+    std::cout << "-> Cantidad de paginas:  " << arr.getPageCount() << std::endl;
+    std::cout << "-> tamano de paginas:  " << arr.getPageSize() << std::endl;
+    std::cout << "-> cantidad de elementos:  " << arr.getTotalElements() << std::endl;
+}
+
+void LegibleFile(const std::filesystem::path& outputpath, const std::filesystem::path& inputPathFile) {
+    // crear el archivo legible
+    std::ifstream InputFile(inputPathFile, std::ios::binary);
+    std::filesystem::path LegiblePath = outputpath/"dataSorted-LegibleFile.txt";
+    std::ofstream LegibleFile(LegiblePath);
+
+    // verificar si se creo correctamente el archivo legible
+    if (!LegibleFile) {
+        throw std::runtime_error("Error al abrir el archivo.");
+    }
+
+    // crear el buffer (De 4096 bytes)
+    const size_t bufferSize = 4096;
+    char buffer[bufferSize];
+
+    size_t dataSize = sizeof(int);
+
+    //Escribir cabecera
+    LegibleFile << "=== Proyecto PagedArray ===" << std::endl;
+    LegibleFile << "Dato Ordenados:" << std::endl;
+
+    //leer el archivo de acuerdo con la cantidad de bytes que caben en el buffer
+    while (InputFile.read(buffer, bufferSize) || InputFile.gcount()>0 ) {
+        std::streamsize bytesRead = InputFile.gcount();
+
+        // leer byte por byte del los datos ingresados en el buffer
+        for (std::streamsize i = 0; i + dataSize <= bytesRead; i += dataSize) {
+
+            // convertir el valor de binario a int
+            int valor = *reinterpret_cast<int*>(&buffer[i]);
+
+            LegibleFile << valor;
+
+            LegibleFile << ",";
+        }
+
+    }
+
+    InputFile.close();
+    LegibleFile.close();
+
+}
+
+void SortFile( const DataVal& variables, int totalElements, PagedArray& arr) {
+
+    if (variables.algorithm == "Quick Sort") {
+        quickSort(arr, 0, totalElements-1);
+    }
+    else if (variables.algorithm == "Merge Sort") {
+        mergeSort( arr, 0, totalElements-1);
+    }
+    else if (variables.algorithm == "Selection Sort") {
+
+    }
+    else if (variables.algorithm == "Insertion Sort") {
+
+    }
+    else {
+
+    }
 }
 
 
@@ -149,18 +233,28 @@ int main(int argc, char* argv[]) {
         std::cout << "Parametros recibidos correctamente correctamente\n";
 
         // copiar archivo input al output
-        copyfile(variables.inputPath, variables.outputPath);
+        copyfile(variables.inputPathFile, variables.outputPathFile);
 
-        // llamar a la clase PagedArray
-        int totalElements = AmountOfElements(variables.inputPath);
-        PagedArray arr(variables.outputPath, variables.pageSize, variables.pageCount, totalElements);
-        std::cout << "Fin de ejecucion arr: " << arr[1] << std::endl;
-        std::cout << "Fin de ejecucion arr: " << arr[2] << std::endl;
-        std::cout << "Fin de ejecucion arr: " << arr[3] << std::endl;
-        std::cout << "Fin de ejecucion arr: " << arr[4] << std::endl;
-        std::cout << "Fin de ejecucion arr: " << arr[5] << std::endl;
-        std::cout << "Fin de ejecucion arr: " << arr[6] << std::endl;
-        std::cout << "Fin de ejecucion Ianbolita final: " << arr[11] << " PageHits: " << arr.pageHits << " PageFaults: "<< arr.pageFaults;
+        // Instanciar un objeto de la clase PagedArray
+        int totalElements = AmountOfElements(variables.inputPathFile);
+        PagedArray arr(variables.outputPathFile, variables.pageSize, variables.pageCount, totalElements);
+
+        // iniciar reloj (ver cuanto dura ordenando archivo)
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // ordenar archivo
+        SortFile(variables, totalElements, arr);
+
+        // parar reloj
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto time = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+
+        // Imprimir estadisticas
+        stadistics(arr,variables, std::chrono::duration<double>(time.count()));
+
+        //hacer el archivo legible
+        LegibleFile(variables.outputPath, variables.outputPathFile);
+
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

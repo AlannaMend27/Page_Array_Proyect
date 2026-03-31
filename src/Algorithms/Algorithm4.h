@@ -1,0 +1,8 @@
+//
+// Created by alann on 31/3/2026.
+//
+
+#ifndef PAGE_ARRAY_PROYECT_ALGORITHM4_H
+#define PAGE_ARRAY_PROYECT_ALGORITHM4_H
+
+#endif //PAGE_ARRAY_PROYECT_ALGORITHM4_H

@@ -14,10 +14,10 @@ private:
     size_t   pageSize;
     size_t   pageCount;
     size_t   totalElements;
+    long long   pageFaults;
+    long long  pageHits;
 
 public:
-    int   pageFaults;
-    int   pageHits;
     PagedArray(std::filesystem::path filePath, int pageSize, int pageCount, int totalElements);
     ~PagedArray();
     void LoadPage(int freePageIndex, size_t PageToLoad);
@@ -29,8 +29,10 @@ public:
     int& operator[](int index);
 
     int getPageFaults()    const { return pageFaults; }
-    int getPageHits()      const { return pageHits; }
-    int getTotalElements() const { return totalElements; }
+    long long getPageHits()      const { return pageHits; }
+    long long getTotalElements() const { return totalElements; }
+    size_t getPageSize() const { return pageSize; }
+    size_t getPageCount() const { return pageCount; }
 };
 
 #endif
