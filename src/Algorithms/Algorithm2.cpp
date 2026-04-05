@@ -1,6 +1,4 @@
 #include "Algorithm2.h"
-
-#include <iostream>
 using namespace std;
 
 // Algoritmo #2 MERGE SORT
@@ -17,7 +15,7 @@ void merge(PagedArray& arr, int left, int mid, int right){
     int* L = new int[n1];
     int* R = new int[n2];
 
-    // Copy data to temp vectors L[] and R[]
+    // copiar los datos a los arreglos temporales L y R
     for (int i = 0; i < n1; i++)
         L[i] = arr[left + i];
     for (int j = 0; j < n2; j++)
@@ -26,8 +24,7 @@ void merge(PagedArray& arr, int left, int mid, int right){
     int i = 0, j = 0;
     int k = left;
 
-    // Merge the temp vectors back
-    // into arr[left..right]
+    // Fusionar los arreglos temporales
     while (i < n1 && j < n2) {
         if (L[i] <= R[j]) {
             arr[k] = L[i];
@@ -59,8 +56,6 @@ void merge(PagedArray& arr, int left, int mid, int right){
     delete[] R;
 }
 
-// begin is for left index and end is right index
-// of the sub-array of arr to be sorted
 void mergeSort(PagedArray& arr, int left, int right){
 
     if (left >= right)

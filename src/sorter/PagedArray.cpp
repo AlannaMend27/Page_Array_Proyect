@@ -46,9 +46,6 @@ PagedArray::PagedArray(std::filesystem::path filePath, int pageSize, int pageCou
         dirty[i] = false;
         clockBit[i] = false;
     }
-
-    std:: cout<<"Hello desde paged Array" << std::endl;
-    
 }
 
 int& PagedArray::operator[](int index){
@@ -185,9 +182,15 @@ int PagedArray::GetSpace() {
     if (freeTop < 0) {
         return -1;
     }
-    int top = freeTop;
+    const int top = freeTop;
     freeTop -= 1;
     return getSpace[top];
+}
+
+void PagedArray::flush() {
+    for (int i = 0; i < pageCount; i++) {
+        if (dirty[i]) SavePage(i);
+    }
 }
 
 // destructor

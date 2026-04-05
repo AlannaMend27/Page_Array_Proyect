@@ -9,8 +9,8 @@ private:
     int* totalMemory;      // slots de páginas en RAM
     int*  pageIds;    // qué página del archivo tiene cada slot
     bool* dirty;      // si la página fue modificada y hay que escribirla al disco
-    bool*  clockBit;   // para el algoritmo LRU
-    int   clockIndex;   // contador global de accesos
+    bool*  clockBit;
+    int   clockIndex;
     size_t   pageSize;
     int   pageCount;
     size_t   totalElements;
@@ -30,6 +30,7 @@ public:
     int FindSpace(size_t numPage);
     int GetSpace();
     int& DataRef(int SlotPage, size_t PageIndex);
+    void flush();
     int& operator[](int index);
 
     int getPageFaults()    const { return pageFaults; }

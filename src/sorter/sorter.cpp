@@ -3,12 +3,13 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
+#include <chrono>
 #include "PagedArray.h"
 #include "../Algorithms/Algorithm1.h"
 #include "../Algorithms/Algorithm2.h"
 #include "../Algorithms/Algorithm3.h"
-#include <chrono>
-
+#include "../Algorithms/Algorithm4.h"
+#include "../Algorithms/Algorithm5.h"
 
 struct DataVal {
     std::filesystem::path inputPathFile;
@@ -24,23 +25,23 @@ std::string getAlgorithm(std::string value) {
     std::string Valuelower = value;
     std::transform(Valuelower.begin(), Valuelower.end(), Valuelower.begin(), ::tolower);
 
-    if (Valuelower == "bubble") {
-        return "Bubble Sort";
-    }
-    if (Valuelower == "shell") {
-        return "Shell Sort";
-    }
-    if (Valuelower == "selection" ) {
-        return "Selection Sort";
-    }
-    if (Valuelower == "merge") {
-        return "Merge Sort";
-    }
     if (Valuelower == "quicksort") {
         return "Quick Sort";
     }
+    if (Valuelower == "mergesort") {
+        return "Merge Sort";
+    }
+    if (Valuelower == "shellsort" ) {
+        return "Shell Sort";
+    }
+    if (Valuelower == "combsort") {
+        return "Comb Sort";
+    }
+    if (Valuelower == "timsort") {
+        return "Tim Sort";
+    }
 
-    throw std::invalid_argument("Algoritmo no valido, los algoritmos validos son: Bubble, Insertion, Selection, Merge o Quicksort");
+    throw std::invalid_argument("Algoritmo no valido, los algoritmos validos son: Quicksort, Mergesort, Shellsort, Combsort o Timsort");
 
 }
 
@@ -152,7 +153,7 @@ void stadistics(PagedArray& arr, const DataVal& variables, std::chrono::duration
 
     std::cout << "==== RESUMEN DE EJECUCION ====  " << std::endl;
     std::cout << "-> Algoritmo utilizado:  " << variables.algorithm << std::endl;
-    std::cout << "-> Duracion:  " << time << std::endl;
+    std::cout << "-> Duracion:  " << time.count() << " s" <<std::endl;
     std::cout << "-> Cantidad de page hits:  " << arr.getPageHits() << std::endl;
     std::cout << "-> Cantidad de page Faults:  " << arr.getPageFaults() << std::endl;
     std::cout << "-> Cantidad de paginas:  " << arr.getPageCount() << std::endl;
@@ -212,12 +213,13 @@ void SortFile( const DataVal& variables, int totalElements, PagedArray& arr) {
         mergeSort( arr, 0, totalElements-1);
     }
     else if (variables.algorithm == "Shell Sort") {
-
+        shellSort(arr, totalElements-1);
     }
-    else if (variables.algorithm == "Insertion Sort") {
-
+    else if (variables.algorithm == "Comb Sort") {
+        combSort(arr, totalElements);
     }
     else {
+        timSort(arr, totalElements);
 
     }
 }
@@ -242,15 +244,16 @@ int main(int argc, char* argv[]) {
         // iniciar reloj (ver cuanto dura ordenando archivo)
         auto start = std::chrono::high_resolution_clock::now();
 
-        // ordenar archivo
+        // ordenar archivo y asegurar escritura en disco
         SortFile(variables, totalElements, arr);
+        arr.flush();
 
         // parar reloj
         auto stop = std::chrono::high_resolution_clock::now();
-        auto time = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+        auto duration = std::chrono::duration<double>(stop - start);
 
         // Imprimir estadisticas
-        stadistics(arr,variables, std::chrono::duration<double>(time.count()));
+        stadistics(arr,variables, duration);
 
         //hacer el archivo legible
         LegibleFile(variables.outputPath, variables.outputPathFile);
