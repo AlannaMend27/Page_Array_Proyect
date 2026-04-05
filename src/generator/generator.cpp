@@ -2,7 +2,7 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
-#include <ctime>
+#include <random>
 
 int getCapacity(std::string size) {
     if (size == "SMALL") return 256;
@@ -17,7 +17,8 @@ int generate(const std::string size, const std::filesystem::path path1) {
     long long n;
 
     // semilla para numeros aleatorios
-    srand(time(NULL));
+    std::mt19937 rng(std::random_device{}());
+    std::uniform_int_distribution<int> dist(INT_MIN, INT_MAX);
 
     // calcular tamano del archivo
     long long capacity = getCapacity(size);
@@ -34,7 +35,7 @@ int generate(const std::string size, const std::filesystem::path path1) {
     //Guardar numeros binarios
     n = (capacity * 1024 * 1024) / sizeof(int);
     for (int i = 0; i < n; i++) {
-        numero = rand();
+        numero = dist(rng);
         outFile.write(reinterpret_cast<char*>(&numero), sizeof(int));
 
         // Verificar que la escritura no fallo
