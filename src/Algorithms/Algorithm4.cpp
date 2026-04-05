@@ -3,7 +3,7 @@ using namespace std;
 
 // Algoritmo #4 COMBSORT
 
-// To find gap between elements
+// encontrar el gap de los elementos para cada iteracion
 int getNextGap(int gap)
 {
     // Shrink gap by Shrink factor
@@ -16,30 +16,31 @@ int getNextGap(int gap)
 
 void combSort(PagedArray& arr, int n)
 {
-    // Initialize gap
+    // Inicializar gap
     int gap = n;
 
-    // Initialize swapped as true to make sure that
-    // loop runs
+    // inicializar bandera de swap en true para que funcione el ciclo
     bool swapped = true;
 
-    // Keep running while gap is more than 1 and last
-    // iteration caused a swap
+    // iterar siempre que gap sea diferente de uno
     while (gap != 1 || swapped == true)
     {
-        // Find next gap
+        // encontrar gap siguiente
         gap = getNextGap(gap);
 
-        // Initialize swapped as false so that we can
-        // check if swap happened or not
+        // Establecer swap como falso al inicio
         swapped = false;
 
-        // Compare all elements with current gap
+        // comparar todos los elementos con el gap actual
         for (int i=0; i<n-gap; i++)
         {
             if (arr[i] > arr[i+gap])
             {
-                swap(arr[i], arr[i+gap]);
+                // swap
+                int temp = arr[i];
+                arr[i] = arr[i+gap];
+                arr[i+gap] = temp;
+                // registrar swap
                 swapped = true;
             }
         }

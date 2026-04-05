@@ -16,11 +16,11 @@ struct DataVal {
     std::filesystem::path outputPathFile;
     std::filesystem::path outputPath;
     std::string algorithm;
-    size_t pageSize;
-    size_t pageCount;
+    int pageSize = 0;
+    int pageCount = 0;
 };
 
-std::string getAlgorithm(std::string value) {
+std::string getAlgorithm(const std::string& value) {
 
     std::string Valuelower = value;
     std::transform(Valuelower.begin(), Valuelower.end(), Valuelower.begin(), ::tolower);
@@ -101,17 +101,23 @@ DataVal RecivedArguments(int argc, char* argv[]) {
 
         }
         else if (parameter1 == "-pageSize") {
-            dataVal.pageSize = std::stoull(parameter2);
+            dataVal.pageSize = std::stoi(parameter2);
+            if (dataVal.pageSize <= 0) {
+                throw std::invalid_argument("el argumento pageSize debe ser un numero positivo");
+            }
         }
         else if (parameter1 == "-pageCount") {
-            dataVal.pageCount = std::stoull(parameter2);
+            dataVal.pageCount = std::stoi(parameter2);
+            if (dataVal.pageCount <= 0) {
+                throw std::invalid_argument("el argumento pageCount debe ser un numero positivo");
+            }
 
         }
     }
     return dataVal;
 }
 
-void copyfile( std::filesystem::path inputpath, std::filesystem::path outputpath) {
+void copyfile(const std::filesystem::path& inputpath, const std::filesystem::path& outputpath) {
 
     // abrir archivos
     std::ifstream  src(inputpath, std::ios::binary);
@@ -136,18 +142,17 @@ void copyfile( std::filesystem::path inputpath, std::filesystem::path outputpath
 
 }
 
-int AmountOfElements(std::filesystem::path inputPath) {
+int amountOfElements(const std::filesystem::path& inputPath) {
     // contar la cantidad de elementos en el archivo
-    FILE* f = fopen(inputPath.string().c_str(), "rb");
-    fseek(f, 0, SEEK_END);
-    long fileSize = ftell(f);
-    fclose(f);
-
-    return fileSize / sizeof(int);
+    std::ifstream f(inputPath, std::ios::binary | std::ios::ate);
+    if (!f.is_open()) {
+        throw std::runtime_error("No se pudo abrir el archivo para contar elementos");
+    }
+    return  static_cast<int>(f.tellg() / sizeof(int));
 
 }
 
-void stadistics(PagedArray& arr, const DataVal& variables, std::chrono::duration<double> time) {
+void statistics(PagedArray& arr, const DataVal& variables, std::chrono::duration<double> time) {
 
     // obtener tiempo
 
@@ -161,7 +166,7 @@ void stadistics(PagedArray& arr, const DataVal& variables, std::chrono::duration
     std::cout << "-> cantidad de elementos:  " << arr.getTotalElements() << std::endl;
 }
 
-void LegibleFile(const std::filesystem::path& outputpath, const std::filesystem::path& inputPathFile) {
+void legibleFile(const std::filesystem::path& outputpath, const std::filesystem::path& inputPathFile) {
     // crear el archivo legible
     std::ifstream InputFile(inputPathFile, std::ios::binary);
     std::filesystem::path LegiblePath = outputpath/"dataSorted-LegibleFile.txt";
@@ -176,14 +181,14 @@ void LegibleFile(const std::filesystem::path& outputpath, const std::filesystem:
     const size_t bufferSize = 4096;
     char buffer[bufferSize];
 
-    size_t dataSize = sizeof(int);
-
     //Escribir cabecera
     LegibleFile << "=== Proyecto PagedArray ===" << std::endl;
     LegibleFile << "Dato Ordenados:" << std::endl;
 
     //leer el archivo de acuerdo con la cantidad de bytes que caben en el buffer
     while (InputFile.read(buffer, bufferSize) || InputFile.gcount()>0 ) {
+
+        int dataSize = sizeof(int);
         std::streamsize bytesRead = InputFile.gcount();
 
         // leer byte por byte del los datos ingresados en el buffer
@@ -204,7 +209,7 @@ void LegibleFile(const std::filesystem::path& outputpath, const std::filesystem:
 
 }
 
-void SortFile( const DataVal& variables, int totalElements, PagedArray& arr) {
+void sortFile( const DataVal& variables, int totalElements, PagedArray& arr) {
 
     if (variables.algorithm == "Quick Sort") {
         quickSort(arr, 0, totalElements-1);
@@ -218,12 +223,12 @@ void SortFile( const DataVal& variables, int totalElements, PagedArray& arr) {
     else if (variables.algorithm == "Comb Sort") {
         combSort(arr, totalElements);
     }
-    else {
+    else if (variables.algorithm == "Tim Sort") {
         timSort(arr, totalElements);
-
+    } else {
+        throw std::runtime_error("Algoritmo no reconocido");
     }
 }
-
 
 int main(int argc, char* argv[]) {
 
@@ -231,32 +236,33 @@ int main(int argc, char* argv[]) {
     try {
 
         // colocar los argumentos en una estructura de variables
-        DataVal variables = RecivedArguments(argc, argv);
-        std::cout << "Parametros recibidos correctamente correctamente\n";
+        const DataVal variables = RecivedArguments(argc, argv);
+        std::cout << "Parametros recibidos correctamente \n";
 
         // copiar archivo input al output
         copyfile(variables.inputPathFile, variables.outputPathFile);
 
         // Instanciar un objeto de la clase PagedArray
-        int totalElements = AmountOfElements(variables.inputPathFile);
+        int totalElements = amountOfElements(variables.inputPathFile);
         PagedArray arr(variables.outputPathFile, variables.pageSize, variables.pageCount, totalElements);
 
         // iniciar reloj (ver cuanto dura ordenando archivo)
         auto start = std::chrono::high_resolution_clock::now();
 
         // ordenar archivo y asegurar escritura en disco
-        SortFile(variables, totalElements, arr);
+        sortFile(variables, totalElements, arr);
         arr.flush();
 
         // parar reloj
-        auto stop = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration<double>(stop - start);
+        const auto stop = std::chrono::high_resolution_clock::now();
+        const auto duration = std::chrono::duration<double>(stop - start);
 
         // Imprimir estadisticas
-        stadistics(arr,variables, duration);
+
+        statistics(arr,variables, duration);
 
         //hacer el archivo legible
-        LegibleFile(variables.outputPath, variables.outputPathFile);
+        legibleFile(variables.outputPath, variables.outputPathFile);
 
 
     } catch (const std::exception& e) {

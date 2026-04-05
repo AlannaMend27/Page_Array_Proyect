@@ -3,6 +3,14 @@ using namespace std;
 
 // ALGORITMO #5 TIMSORT
 
+//funcion que retorna el minimo
+int minimun(int n1, int n2) {
+    if (n1>n2) {
+        return n2;
+    }
+    return n1;
+}
+
 // Insertion Sort
 void timInsertion(PagedArray& arr, int izquierda, int derecha) {
     for (int i = izquierda + 1; i <= derecha; i++) {
@@ -68,7 +76,7 @@ void timSort(PagedArray& arr, int n) {
 
     // ordenar bloques pequeños del archivo con insertion sort
     for (int i = 0; i < n; i += subSize) {
-        int right = min(i + subSize - 1, n - 1);
+        int right = minimun(i + subSize - 1, n - 1);
         timInsertion(arr, i, right);
     }
 
@@ -78,7 +86,7 @@ void timSort(PagedArray& arr, int n) {
         for (int left = 0; left < n; left += 2 * size) {
 
             int mid = left + size - 1;
-            int right = min(left + 2 * size - 1, n - 1);
+            int right = minimun(left + 2 * size - 1, n - 1);
 
             if (mid < right) {
                 timMerge(arr, left, mid, right);

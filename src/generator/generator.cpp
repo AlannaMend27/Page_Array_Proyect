@@ -4,26 +4,24 @@
 #include <filesystem>
 #include <random>
 
-int getCapacity(std::string size) {
+size_t getCapacity(const std::string& size) {
     if (size == "SMALL") return 256;
     if (size == "MEDIUM") return 512;
-    return 1024;
+    if (size == "LARGE") return 1024;
+    throw std::invalid_argument("Ingrese una capacidad valida: SMALL - MEDIUM - LARGE");
 }
 
-int generate(const std::string size, const std::filesystem::path path1) {
-    // Variables
-    std::filesystem::path filePath = path1 / "data.bin";
-    int numero;
-    long long n;
+int generate(const std::string& size, const std::filesystem::path& path1) {
 
-    // semilla para numeros aleatorios
+    // Semilla para numeros aleatorios
     std::mt19937 rng(std::random_device{}());
     std::uniform_int_distribution<int> dist(INT_MIN, INT_MAX);
 
-    // calcular tamano del archivo
-    long long capacity = getCapacity(size);
+    // Calcular tamano del archivo
+    const size_t capacity = getCapacity(size);
 
     // Crear archivo
+    std::filesystem::path filePath = path1 / "data.bin";
     std::ofstream outFile(filePath, std::ios::binary);
 
     // Verificar que el archivo se abrio correctamente
@@ -32,10 +30,10 @@ int generate(const std::string size, const std::filesystem::path path1) {
         return 1;
     }
 
-    //Guardar numeros binarios
-    n = (capacity * 1024 * 1024) / sizeof(int);
-    for (int i = 0; i < n; i++) {
-        numero = dist(rng);
+    //Guardar numeros binarios en el archivo abierto
+    const size_t n = (capacity * 1024 * 1024) / sizeof(int);
+    for (size_t i = 0; i < n; i++) {
+        int numero = dist(rng);
         outFile.write(reinterpret_cast<char*>(&numero), sizeof(int));
 
         // Verificar que la escritura no fallo
@@ -46,7 +44,13 @@ int generate(const std::string size, const std::filesystem::path path1) {
         }
     }
     outFile.close();
-    std::cout << "Archivo generado correctamente" << std::endl;
+
+    if (outFile.fail()) {
+        std::cerr << "Error: fallo al cerrar el archivo" << std::endl;
+        return 1;
+    }
+
+    std::cout << "Generator: Archivo generado correctamente" << std::endl;
     return 0;
 
 }
@@ -81,11 +85,17 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Validacion de path
+    // Validaciones de path
     if (!std::filesystem::exists(path1)) {
         std::cerr << "Error: La ruta ingresada no existe";
         return 1;
     }
+
+    if (!std::filesystem::is_directory(path1)) {
+        std::cerr << "Error: La ruta ingresada no es un directorio";
+        return 1;
+    }
+
 
     //GENERADOR DE ARCHIVOS
     generate(size,path1);

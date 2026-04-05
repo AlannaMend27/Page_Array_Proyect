@@ -3,6 +3,7 @@ using namespace std;
 
 // Algoritmo #1 QUICK SORT
 
+
 int partition(PagedArray& arr, int low, int high) {
 
     // escoger pivote
@@ -16,11 +17,17 @@ int partition(PagedArray& arr, int low, int high) {
     for (int j = low; j <= high - 1; j++) {
         if (arr[j] < pivot) {
             i++;
-            swap(arr[i], arr[j]);
+            //swap
+            int temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
         }
     }
 
-    swap(arr[i + 1], arr[high]);
+    // swap
+    int temp = arr[i+1];
+    arr[i+1] = arr[high];
+    arr[high] = temp;
     return i + 1;
 }
 
