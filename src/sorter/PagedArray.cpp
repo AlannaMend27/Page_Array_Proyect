@@ -5,12 +5,12 @@
 
 // constructor
 PagedArray::PagedArray(std::filesystem::path filePath, int pageSize, int pageCount, int totalElements) {
-    this->pageSize      = pageSize;
-    this->pageCount     = pageCount;
+    this->pageSize = pageSize;
+    this->pageCount = pageCount;
     this->totalElements = totalElements;
-    this->pageFaults    = 0;
-    this->pageHits      = 0;
-    this->lruClock      = 0;
+    this->pageFaults = 0;
+    this->pageHits = 0;
+    this->clockIndex = 0;
 
 
     // verificar que el archivo se pueda abrir
@@ -23,13 +23,28 @@ PagedArray::PagedArray(std::filesystem::path filePath, int pageSize, int pageCou
     totalMemory    = new int[pageSize * pageCount];
     pageIds  = new int[pageCount];
     dirty    = new bool[pageCount];
-    lruOrder = new int[pageCount];
+    clockBit = new bool[pageCount];
 
-    // inicializar variables importantes
+    // FIND SPACE: variables que guardan cual es el slot de memoria de cada pagina del archivo
+    totalPages = (totalElements + pageSize-1) / pageSize;
+    this->FindSlot = new int [totalPages];
+
+    for (int i = 0; i < totalPages; i++) {
+        FindSlot[i] = -1;
+    }
+
+    // GET SPACE: variables que guardan la cantidad de espacio libre
+    this -> getSpace = new int[pageCount];
+    this -> freeTop = pageCount-1;
+    for (int i = 0; i < pageCount; i++) {
+        getSpace[i] = i;
+    }
+
+    // inicializar variables importantes de la clase
     for (int i = 0; i < pageCount; i++) {
         pageIds[i] = -1;
         dirty[i] = false;
-        lruOrder[i] = 0;
+        clockBit[i] = false;
     }
 
     std:: cout<<"Hello desde paged Array" << std::endl;
@@ -54,7 +69,7 @@ int& PagedArray::operator[](int index){
     if (SlotPage != -1) {
         // actualizar variale y retornar el valor
         pageHits += 1;
-        lruOrder[SlotPage] = ++lruClock;
+        clockBit[SlotPage] = true;
     }
     else {
         pageFaults += 1;
@@ -62,12 +77,12 @@ int& PagedArray::operator[](int index){
         SlotPage = GetSpace();
         if (SlotPage != -1) {
             LoadPage(SlotPage, numPage);
-            lruOrder[SlotPage] = ++lruClock;
+            clockBit[SlotPage] = true;
         }
         else {
-            SlotPage = ReplaceLRU();
+            SlotPage = ReplaceClock();
             LoadPage(SlotPage, numPage);
-            lruOrder[SlotPage] = ++lruClock;
+            clockBit[SlotPage] = true;
         }
 
     }
@@ -105,10 +120,11 @@ void PagedArray::LoadPage(int freePageIndex, size_t PageToLoad) {
     // actualizar el id de las paginas cargadas y si la pagina fue usada
     pageIds[freePageIndex] = PageToLoad;
     dirty[freePageIndex] = false;
+    FindSlot[PageToLoad] = freePageIndex;
 
 }
 
-void PagedArray::SavePage(size_t PageIndex) {
+void PagedArray::SavePage(size_t PageIndex, bool PlaceFree) {
 
     // calcular donde se cuencuentra la pagina
     size_t PageSearch = pageIds[PageIndex] * pageSize;
@@ -131,48 +147,47 @@ void PagedArray::SavePage(size_t PageIndex) {
     int* aux = &this->totalMemory[PageIndex * pageSize];
     std::fwrite(aux,sizeof(int),intsToWrite,file);
 
-    // actualizar el id de las paginas cargadas y si la pagina fue usada
+    // actualizar el id de las paginas cargadas y si la pagina fue usada marcar como libre
+    FindSlot[pageIds[PageIndex]] = -1;
     pageIds[PageIndex] = -1;
     dirty[PageIndex] = false;
+    clockBit[PageIndex] = false;
 
 }
 
-int PagedArray::ReplaceLRU() {
-    size_t menor = lruOrder[0];
-    int index = 0;
-
-    for (size_t i = 0; i< pageCount;i++) {
-        if (lruOrder[i]< menor) {
-            menor = lruOrder[i];
-            index = i;
+int PagedArray::ReplaceClock() {
+    while (true) {
+        if (clockBit[clockIndex] == false) {
+            // se ha encontrado uno que se puede reemplazar
+            if (dirty[clockIndex] == true) {
+                SavePage(clockIndex);
+            }
+            int selected = clockIndex;
+            clockIndex = (clockIndex + 1) % pageCount;
+            return selected;
         }
+        // damos una segunda oportunidad al bit
+        clockBit[clockIndex] = false;
+        clockIndex = (clockIndex + 1) % pageCount;
+
     }
-    if (dirty[index] == true) {
-        SavePage(index);
-    }
-    return index;
 }
 
 
 
 int PagedArray::FindSpace(size_t numPage) {
-    // encontrar el espacio donde esta guardada una pagina
-    for (int i = 0 ; i < pageCount; i++){
-        if (numPage == pageIds[i]) {
-            return i;
-        }
-    }
-    return -1;
+    // encontrar el espacio donde esta guardada una pagina en memoria
+    return FindSlot[numPage];
 }
 
 int PagedArray::GetSpace() {
     // obtener un lugar libre para cargar una pagina
-    for (int i = 0 ; i < pageCount; i++) {
-        if (-1 == pageIds[i]) {
-            return i;
-        }
+    if (freeTop < 0) {
+        return -1;
     }
-    return -1;
+    int top = freeTop;
+    freeTop -= 1;
+    return getSpace[top];
 }
 
 // destructor
@@ -186,10 +201,9 @@ PagedArray::~PagedArray() {
     delete[] totalMemory;
     delete[] pageIds;
     delete[] dirty;
-    delete[] lruOrder;
+    delete[] clockBit;
 
     if (file) fclose(file);
 
 }
 
-//

@@ -9,20 +9,24 @@ private:
     int* totalMemory;      // slots de páginas en RAM
     int*  pageIds;    // qué página del archivo tiene cada slot
     bool* dirty;      // si la página fue modificada y hay que escribirla al disco
-    int*  lruOrder;   // para el algoritmo LRU
-    int   lruClock;   // contador global de accesos
+    bool*  clockBit;   // para el algoritmo LRU
+    int   clockIndex;   // contador global de accesos
     size_t   pageSize;
-    size_t   pageCount;
+    int   pageCount;
     size_t   totalElements;
     long long   pageFaults;
     long long  pageHits;
+    int* FindSlot;
+    int totalPages;
+    int* getSpace;
+    int freeTop;
 
 public:
     PagedArray(std::filesystem::path filePath, int pageSize, int pageCount, int totalElements);
     ~PagedArray();
     void LoadPage(int freePageIndex, size_t PageToLoad);
-    void SavePage(size_t PageIndex);
-    int ReplaceLRU();
+    void SavePage(size_t PageIndex, bool PlaceFree = true);
+    int ReplaceClock();
     int FindSpace(size_t numPage);
     int GetSpace();
     int& DataRef(int SlotPage, size_t PageIndex);

@@ -6,6 +6,7 @@
 #include "PagedArray.h"
 #include "../Algorithms/Algorithm1.h"
 #include "../Algorithms/Algorithm2.h"
+#include "../Algorithms/Algorithm3.h"
 #include <chrono>
 
 
@@ -26,8 +27,8 @@ std::string getAlgorithm(std::string value) {
     if (Valuelower == "bubble") {
         return "Bubble Sort";
     }
-    if (Valuelower == "insertion") {
-        return "Insertion Sort";
+    if (Valuelower == "shell") {
+        return "Shell Sort";
     }
     if (Valuelower == "selection" ) {
         return "Selection Sort";
@@ -49,7 +50,6 @@ DataVal RecivedArguments(int argc, char* argv[]) {
     if (argc != 11) {
         throw std::invalid_argument("cantidad incorrecta de argumentos");
     }
-
     // inicializar en la funcion la estructura de variables
     DataVal dataVal;
 
@@ -211,7 +211,7 @@ void SortFile( const DataVal& variables, int totalElements, PagedArray& arr) {
     else if (variables.algorithm == "Merge Sort") {
         mergeSort( arr, 0, totalElements-1);
     }
-    else if (variables.algorithm == "Selection Sort") {
+    else if (variables.algorithm == "Shell Sort") {
 
     }
     else if (variables.algorithm == "Insertion Sort") {
