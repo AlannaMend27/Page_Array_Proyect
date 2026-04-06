@@ -11,33 +11,33 @@ private:
     bool* dirty;      // si la página fue modificada y hay que escribirla al disco
     bool*  clockBit;
     int   clockIndex;
-    size_t   pageSize;
+    int   pageSize;
     int   pageCount;
-    size_t   totalElements;
+    int   totalElements;
     long long   pageFaults;
     long long  pageHits;
-    int* FindSlot;
+    int* findSlot;
     int totalPages;
-    int* getSpace;
+    int* freeSlot;
     int freeTop;
 
 public:
-    PagedArray(std::filesystem::path filePath, int pageSize, int pageCount, int totalElements);
+    PagedArray(const std::filesystem::path& filePath, int pageSize, int pageCount, int totalElements);
     ~PagedArray();
-    void LoadPage(int freePageIndex, size_t PageToLoad);
-    void SavePage(size_t PageIndex, bool PlaceFree = true);
+    void LoadPage(int freePageIndex, int PageToLoad) ;
+    void SavePage(int PageIndex) ;
     int ReplaceClock();
-    int FindSpace(size_t numPage);
+    int FindSpace(int numPage) const;
     int GetSpace();
-    int& DataRef(int SlotPage, size_t PageIndex);
+    int& DataRef(int slotPage, size_t pageIndex) const;
     void flush();
     int& operator[](int index);
 
-    int getPageFaults()    const { return pageFaults; }
-    long long getPageHits()      const { return pageHits; }
-    long long getTotalElements() const { return totalElements; }
-    size_t getPageSize() const { return pageSize; }
-    size_t getPageCount() const { return pageCount; }
+    [[nodiscard]] long long getPageFaults()    const { return pageFaults; }
+    [[nodiscard]] long long getPageHits()      const { return pageHits; }
+    [[nodiscard]] int getTotalElements() const { return totalElements; }
+    [[nodiscard]] int getPageSize() const { return pageSize; }
+    [[nodiscard]] int getPageCount() const { return pageCount; }
 };
 
 #endif
