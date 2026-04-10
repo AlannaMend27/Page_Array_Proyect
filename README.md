@@ -4,7 +4,6 @@ Este proyecto implementa un sistema de ordenamiento de archivos binarios de gran
 ## Requisitos
 - Compilador C++ con soporte C++20
 - CMake 3.20 o superior
-- Sistema operativo: Windows
 
 ## Compilación
 Para ejecutar el proyecto "Arreglos Paginados" es necesario hacerlo desde la terminal. 
@@ -83,7 +82,7 @@ La segunda parte del proyecto se encarga de ordenar los archivos binarios creado
   - `mergesort`
   - `shellsort`
   - `combsort`
-  - `timsort`
+  - `radixsort`
 - `-pageSize`: Indica la cantidad máxima de enteros por página
 - `-pageCount`: Indica la cantidad de páginas en memoria RAM
 
