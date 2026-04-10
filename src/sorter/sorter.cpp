@@ -37,8 +37,8 @@ std::string getAlgorithm(const std::string& value) {
     if (Valuelower == "combsort") {
         return "Comb Sort";
     }
-    if (Valuelower == "timsort") {
-        return "Tim Sort";
+    if (Valuelower == "radixsort") {
+        return "Radix Sort";
     }
 
     throw std::invalid_argument("Algoritmo no valido, los algoritmos validos son: Quicksort, Mergesort, Shellsort, Combsort o Timsort");
@@ -223,8 +223,8 @@ void sortFile( const DataVal& variables, int totalElements, PagedArray& arr) {
     else if (variables.algorithm == "Comb Sort") {
         combSort(arr, totalElements);
     }
-    else if (variables.algorithm == "Tim Sort") {
-        timSort(arr, totalElements);
+    else if (variables.algorithm == "Radix Sort") {
+        radixSort(arr, totalElements);
     } else {
         throw std::runtime_error("Algoritmo no reconocido");
     }

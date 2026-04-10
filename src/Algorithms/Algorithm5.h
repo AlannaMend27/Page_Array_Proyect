@@ -4,9 +4,9 @@
 // Definicion de la clase PagedArray
 #include "../sorter/PagedArray.h"
 
-// metodos del algoritmo timsort
-void timSort(PagedArray& arr, int n);
-void timMerge(PagedArray& arr, int izquierda, int medio, int derecha);
-void timInsertion(PagedArray& arr, int izquierda, int derecha);
+// metodos del algoritmo radix sort
+int getMax(PagedArray& arr, int n);
+void countSort(PagedArray& arr, int n, int exp);
+void radixSort(PagedArray& arr, int n);
 
 #endif //PAGE_ARRAY_PROYECT_ALGORITHM5_H

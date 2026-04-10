@@ -5,9 +5,9 @@
 #include <random>
 
 size_t getCapacity(const std::string& size) {
-    if (size == "SMALL") return 256;
-    if (size == "MEDIUM") return 512;
-    if (size == "LARGE") return 1024;
+    if (size == "SMALL") return 32;
+    if (size == "MEDIUM") return 64;
+    if (size == "LARGE") return 128;
     throw std::invalid_argument("Ingrese una capacidad valida: SMALL - MEDIUM - LARGE");
 }
 
